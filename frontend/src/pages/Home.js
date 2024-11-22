@@ -10,6 +10,7 @@ const Home = () => {
   const [newBookTitle, setNewBookTitle] = useState("");
   const [newBookAuthor, setNewBookAuthor] = useState("");
   const [newBookDescription, setNewBookDescription] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false); // State to toggle Add Book form visibility
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -58,6 +59,7 @@ const Home = () => {
       setNewBookTitle("");
       setNewBookAuthor("");
       setNewBookDescription("");
+      setShowAddForm(false); // Hide the form after submission
       alert("Book added successfully!");
     } catch (err) {
       console.error("Error adding book:", err);
@@ -72,8 +74,13 @@ const Home = () => {
     <div>
       <h1>Featured Books</h1>
 
-      {/* Add Book Form */}
-      {isAdmin && (
+      {/* Add Book Button (visible only for admins) */}
+      {isAdmin && !showAddForm && (
+        <button onClick={() => setShowAddForm(true)}>Add Book</button>
+      )}
+
+      {/* Add Book Form (visible when showAddForm is true) */}
+      {isAdmin && showAddForm && (
         <div>
           <h2>Add a New Book</h2>
           <form onSubmit={handleAddBook}>
