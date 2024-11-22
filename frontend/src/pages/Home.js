@@ -16,7 +16,7 @@ const Home = () => {
     const fetchBooks = async () => {
       try {
         const response = await Axios.get("http://localhost:5000/api/books");
-        setBooks(response.data); // Update state with books data
+        setBooks(response.data); 
       } catch (err) {
         console.error("Error fetching books:", err);
         // Improved error handling
@@ -37,7 +37,7 @@ const Home = () => {
     // Check if the user is logged in and if the user is an admin
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData && userData.isAdmin) {
-      setIsAdmin(true); // Set the user as admin if they are an admin
+      setIsAdmin(true); 
     }
   }, []);
 
@@ -53,7 +53,7 @@ const Home = () => {
 
     try {
       const response = await Axios.post("http://localhost:5000/api/books", newBook);
-      // On success, add the new book to the list without refreshing the page
+      
       setBooks((prevBooks) => [...prevBooks, response.data]);
       // Clear the form fields
       setNewBookTitle("");
