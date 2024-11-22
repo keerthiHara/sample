@@ -3,54 +3,35 @@ const router = express.Router();
 const Review = require("../models/Review");
 const Book = require("../models/Book");
 
-// Get reviews for a book
-router.get("/:bookId", async (req, res) => {
-  const reviews = await Review.find({ book: req.params.bookId }).populate("user");
-  res.json(reviews);
-});
-
-// Add a review
-// router.post("/", async (req, res) => {
-//   const review = new Review(req.body);
-//   await review.save();
-//   res.status(201).json(review);
-// });
-// router.post("/reviews", (req, res) => {
-//   const newReview = new Review(req.body);
-//   newReview.save((err, review) => {
-//     if (err) return res.status(500).send(err);
-//     Book.findByIdAndUpdate(
-//       req.body.book,
-//       { $push: { reviews: review._id } }, // Add review ID to book's reviews
-//       { new: true },
-//       (err) => {
-//         if (err) return res.status(500).send(err);
-//         res.json(review);
-//       }
-//     );
-//   });
-// });
-router.post("/reviews", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { user, book, content, rating } = req.body;
 
-    // Validate user and book as ObjectIds
-    if (!mongoose.Types.ObjectId.isValid(user) || !mongoose.Types.ObjectId.isValid(book)) {
-      return res.status(400).json({ error: "Invalid user or book ID." });
-    }
-
-    // Create and save review
+    // Create and save the new review
     const newReview = new Review({ user, book, content, rating });
     const savedReview = await newReview.save();
 
-    // Update the book with the new review ID
-    await Book.findByIdAndUpdate(book, { $push: { reviews: savedReview._id } });
+    // Find the book and update the ratings
+    const bookToUpdate = await Book.findById(book).populate("reviews");
+    if (!bookToUpdate) {
+      return res.status(404).json({ error: "Book not found" });
+    }
+
+    // Recalculate the average rating
+    bookToUpdate.reviews.push(savedReview._id); // Add new review to book
+    await bookToUpdate.save(); // Save updated book with the new review
+
+    const allReviews = await Review.find({ book: bookToUpdate._id });
+    const totalRating = allReviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / allReviews.length;
+
+    bookToUpdate.ratings = averageRating; // Update the average rating
+    await bookToUpdate.save();
 
     res.status(201).json(savedReview);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 module.exports = router;

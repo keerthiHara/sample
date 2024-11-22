@@ -1,28 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-
-// const BookDetail = () => {
-//   const { id } = useParams();
-//   const [book, setBook] = useState(null);
-
-//   useEffect(() => {
-//     fetch(`http://localhost:5000/api/books/${id}`)
-//       .then((res) => res.json())
-//       .then((data) => setBook(data));
-//   }, [id]);
-
-//   return book ? (
-//     <div>
-//       <h2>{book.title}</h2>
-//       <p>{book.author}</p>
-//       <p>{book.description}</p>
-//     </div>
-//   ) : (
-//     <p>Loading...</p>
-//   );
-// };
-
-// export default BookDetail;
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -30,8 +5,8 @@ const BookDetail = () => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [newReviewContent, setNewReviewContent] = useState(""); // Define newReviewContent
-  const [newReviewRating, setNewReviewRating] = useState(1); // Define newReviewRating
+  const [newReviewContent, setNewReviewContent] = useState("");
+  const [newReviewRating, setNewReviewRating] = useState(1);
 
   useEffect(() => {
     // Fetch book details
@@ -39,23 +14,26 @@ const BookDetail = () => {
       .then((res) => res.json())
       .then((data) => {
         setBook(data);
-        setReviews(data.reviews || []); // Ensure reviews are set
+        // setReviews(data.reviews || []); // Set reviews if available
       });
   }, [id]);
 
-  // Function to handle review submission
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
 
     const reviewData = {
-      user: "648a1b3c2b4312d4e5280a2d", // Replace with logged-in user ID
+      user: "648a1b3c2b4312d4e5280a2d", // Replace with actual logged-in user ID
       book: id, // Current book ID
       content: newReviewContent,
       rating: newReviewRating,
     };
 
+    console.log(id)
+    console.log(reviewData);
+    
+
     try {
-      const response = await fetch("http://localhost:5000/api/reviews", {
+      var response = await fetch("http://localhost:5000/api/reviews", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,15 +43,17 @@ const BookDetail = () => {
 
       if (response.ok) {
         const newReview = await response.json();
-        setReviews((prevReviews) => [...prevReviews, newReview]);
-        setNewReviewContent(""); // Reset the form
-        setNewReviewRating(1);
+        setReviews((prevReviews) => [...prevReviews, newReview]); // Update reviews
+        setNewReviewContent(""); // Reset form content
+        setNewReviewRating(1); // Reset rating
       } else {
         const error = await response.json();
         console.error("Error adding review:", error.error);
       }
     } catch (err) {
-      console.error("Error:", err);
+      // console.error("Network error:", err);
+      console.log(response);
+      
     }
   };
 
@@ -100,14 +80,14 @@ const BookDetail = () => {
         <textarea
           placeholder="Write your review here"
           value={newReviewContent}
-          onChange={(e) => setNewReviewContent(e.target.value)} // Update newReviewContent
+          onChange={(e) => setNewReviewContent(e.target.value)}
         ></textarea>
         <br />
         <label>
           Rating:
           <select
             value={newReviewRating}
-            onChange={(e) => setNewReviewRating(Number(e.target.value))} // Update newReviewRating
+            onChange={(e) => setNewReviewRating(Number(e.target.value))}
           >
             {[1, 2, 3, 4, 5].map((rating) => (
               <option key={rating} value={rating}>
@@ -126,4 +106,3 @@ const BookDetail = () => {
 };
 
 export default BookDetail;
-
