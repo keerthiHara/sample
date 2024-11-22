@@ -1,28 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import BookCard from "../components/BookCard";
-
-// const Home = () => {
-//   const [books, setBooks] = useState([]);
-
-//   useEffect(() => {
-//     fetch("/api/books")
-//       .then((res) => res.json())
-//       .then((data) => setBooks(data));
-//   }, []);
-
-//   return (
-//     <div>
-//       <h2>Featured Books</h2>
-//       <div>
-//         {books.map((book) => (
-//           <BookCard key={book._id} book={book} />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Home;
 import React, { useEffect, useState } from "react";
 import Axios from "axios";
 import BookCard from "../components/BookCard";
@@ -31,12 +6,15 @@ const Home = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false); // State to track if the user is an admin
+  const [newBookTitle, setNewBookTitle] = useState("");
+  const [newBookAuthor, setNewBookAuthor] = useState("");
+  const [newBookDescription, setNewBookDescription] = useState("");
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         const response = await Axios.get("http://localhost:5000/api/books");
-        console.log("Books fetched successfully:", response.data);
         setBooks(response.data); // Update state with books data
       } catch (err) {
         console.error("Error fetching books:", err);
@@ -54,7 +32,38 @@ const Home = () => {
     };
 
     fetchBooks();
+
+    // Check if the user is logged in and if the user is an admin
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (userData && userData.isAdmin) {
+      setIsAdmin(true); // Set the user as admin if they are an admin
+    }
   }, []);
+
+  // Function to handle adding a new book
+  const handleAddBook = async (e) => {
+    e.preventDefault();
+
+    const newBook = {
+      title: newBookTitle,
+      author: newBookAuthor,
+      description: newBookDescription,
+    };
+
+    try {
+      const response = await Axios.post("http://localhost:5000/api/books", newBook);
+      // On success, add the new book to the list without refreshing the page
+      setBooks((prevBooks) => [...prevBooks, response.data]);
+      // Clear the form fields
+      setNewBookTitle("");
+      setNewBookAuthor("");
+      setNewBookDescription("");
+      alert("Book added successfully!");
+    } catch (err) {
+      console.error("Error adding book:", err);
+      setError("There was an error adding the book. Please try again.");
+    }
+  };
 
   if (loading) return <p>Loading books...</p>;
   if (error) return <p>{error}</p>;
@@ -62,17 +71,52 @@ const Home = () => {
   return (
     <div>
       <h1>Featured Books</h1>
+
+      {/* Add Book Form */}
+      {isAdmin && (
+        <div>
+          <h2>Add a New Book</h2>
+          <form onSubmit={handleAddBook}>
+            <div>
+              <label>Title</label>
+              <input
+                type="text"
+                value={newBookTitle}
+                onChange={(e) => setNewBookTitle(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Author</label>
+              <input
+                type="text"
+                value={newBookAuthor}
+                onChange={(e) => setNewBookAuthor(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Description</label>
+              <textarea
+                value={newBookDescription}
+                onChange={(e) => setNewBookDescription(e.target.value)}
+                required
+              ></textarea>
+            </div>
+            <button type="submit">Add Book</button>
+          </form>
+        </div>
+      )}
+
+      {/* Display list of books */}
       <div>
         {books.length === 0 ? (
           <p>No books available.</p>
         ) : (
           books.map((book) => (
-            // <div key={book._id}>
-            //   <h2>{book.title}</h2>
-            //   <p>{book.author}</p>
-            //   <p>{book.description}</p>
-            // </div>
-            <BookCard key={book._id} book={book} />
+            <div key={book._id}>
+              <BookCard book={book} />
+            </div>
           ))
         )}
       </div>

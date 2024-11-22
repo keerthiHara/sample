@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import BookCard from "../components/BookCard";
 
-const Filterbook = () => {
+const FilterBook = () => {
   const [books, setBooks] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,4 +106,4 @@ const Filterbook = () => {
   );
 };
 
-export default Filterbook;
+export default FilterBook;

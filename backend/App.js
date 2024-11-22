@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const bookRoutes = require("./routes/books");
 const reviewRoutes = require("./routes/reviews");
+const userRoutes = require("./routes/users");
 
 const app = express();
 const PORT = 5000;
@@ -15,11 +16,15 @@ app.use(bodyParser.json());
 
 // Database connection
 mongoose
-  .connect("mongodb://127.0.0.1:27017/bookReviewDB", { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect("mongodb://127.0.0.1:27017/bookReviewDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 // Routes
+app.use("/api/users", userRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/reviews", reviewRoutes);
 
