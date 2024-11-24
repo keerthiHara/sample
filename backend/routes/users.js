@@ -16,18 +16,17 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update user profile
-router.put("/:id", async (req, res) => {
+router.get("/user/:id", async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json({ name: user.name, email: user.email, profileImage: user.profileImage });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching user details" });
   }
 });
+
 
 // Example route for user login
 router.post("/signin", async (req, res) => {
