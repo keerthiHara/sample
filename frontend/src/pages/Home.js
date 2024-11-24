@@ -7,9 +7,11 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userData, setUserData] = useState(null); // To store user details
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false); // To toggle profile dropdown visibility
-  const [showAddForm, setShowAddForm] = useState(false); // For Add Book form visibility
+  const [userData, setUserData] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  // const [newProfileImage, setNewProfileImage] = useState(null); // For profile image upload
+  const [newBook, setNewBook] = useState({ title: "", author: "" }); // For adding new books
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -34,15 +36,12 @@ const Home = () => {
       const storedUserData = JSON.parse(localStorage.getItem("userData"));
       if (storedUserData) {
         setUserData(storedUserData);
-
-        // Fetch email (if needed) from the backend
         try {
           const response = await Axios.get(`http://localhost:5000/api/users/user/${storedUserData._id}`);
           setUserData((prev) => ({ ...prev, email: response.data.email }));
         } catch (err) {
           console.error("Error fetching user email:", err);
         }
-
         if (storedUserData.isAdmin) {
           setIsAdmin(true);
         }
@@ -52,6 +51,46 @@ const Home = () => {
     fetchBooks();
     fetchUserData();
   }, []);
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+  
+      // Send the file to the backend
+      Axios.post("http://localhost:5000/api/users/upload-profile-image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+        .then((response) => {
+          // Update the state with the new profile image URL
+          setUserData((prev) => ({ ...prev, profileImage: response.data.profileImage }));
+        })
+        .catch((err) => {
+          console.error("Error uploading profile image:", err);
+          alert("Error uploading image. Please try again.");
+        });
+    }
+  };
+  
+  
+
+  const handleAddBook = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await Axios.post("http://localhost:5000/api/books", newBook);
+      setBooks((prevBooks) => [...prevBooks, response.data]);
+      setShowAddForm(false);
+    } catch (err) {
+      console.error("Error adding book:", err);
+    }
+  };
+
+  const handleBookChange = (e) => {
+    setNewBook({ ...newBook, [e.target.name]: e.target.value });
+  };
 
   if (loading) return <p>Loading books...</p>;
   if (error) return <p>{error}</p>;
@@ -70,7 +109,7 @@ const Home = () => {
           onClick={() => setShowProfileDropdown(!showProfileDropdown)}
         >
           <img
-            src={userData?.profileImage || "default-profile.png"} // Replace with default profile image
+            src={userData?.profileImage || "default-profile.png"} // Use default profile image if no user image
             alt="Profile"
             style={{ width: "40px", height: "40px", borderRadius: "50%" }}
           />
@@ -96,6 +135,19 @@ const Home = () => {
             <p>
               <strong>Email:</strong> {userData.email || "Email not available"}
             </p>
+
+            {/* Profile Image Update */}
+            <div>
+              <label htmlFor="profileImageUpload" style={{ cursor: "pointer", color: "#007bff" }}>
+                Update Profile Picture
+              </label>
+              <input
+                type="file"
+                id="profileImageUpload"
+                style={{ display: "none" }}
+                onChange={handleProfileImageChange}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -119,12 +171,26 @@ const Home = () => {
           }}
         >
           <h3>Add a New Book</h3>
-          <form>
+          <form onSubmit={handleAddBook}>
             <label>Title: </label>
-            <input type="text" name="title" placeholder="Book Title" required />
+            <input
+              type="text"
+              name="title"
+              value={newBook.title}
+              onChange={handleBookChange}
+              placeholder="Book Title"
+              required
+            />
             <br />
             <label>Author: </label>
-            <input type="text" name="author" placeholder="Author" required />
+            <input
+              type="text"
+              name="author"
+              value={newBook.author}
+              onChange={handleBookChange}
+              placeholder="Author"
+              required
+            />
             <br />
             <button type="submit">Submit</button>
             <button
